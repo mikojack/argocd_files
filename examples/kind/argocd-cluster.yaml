@@ -1,0 +1,12 @@
+# Cluster that runs Argo CD itself.
+# kind create cluster --name argocd --config examples/kind/argocd-cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # Argo CD UI reachable on http://localhost:8080 once an Ingress or a
+      # NodePort service is in place; port-forward works without this too.
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP

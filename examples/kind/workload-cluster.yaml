@@ -1,0 +1,6 @@
+# Second cluster -- the deployment target used from exercise 4 onwards.
+# kind create cluster --name workload --config examples/kind/workload-cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
