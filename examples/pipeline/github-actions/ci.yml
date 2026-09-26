@@ -1,0 +1,86 @@
+# Lives in the APPLICATION repository, not this one.
+#
+# Builds an image, then writes the new tag into the config repository. That
+# commit is the deployment: Argo CD notices it and syncs. The workflow never
+# talks to a cluster, so it holds no kubeconfig and no cluster token.
+
+name: build and publish
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ${{ github.repository }}
+  CONFIG_REPO: your-org/argocd_files
+  # CI writes to staging only. Production is a promotion PR -- see
+  # promote-to-production.yml.
+  OVERLAY: examples/apps/kustomize-webapp/overlays/dev
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "run the real test suite here"
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for the registry login below. Pushing to a cloud registry over
+      # OIDC instead (aws-actions/configure-aws-credentials and friends) needs
+      # `id-token: write` here -- leaving it out is the usual reason an OIDC
+      # login fails with "credentials could not be loaded".
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to the registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # An immutable tag. `latest` would make every Argo CD diff read
+      # "latest -> latest", which tells you nothing about what changed.
+      - name: Derive the tag
+        id: meta
+        run: echo "tag=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # A token scoped to the config repository only. Not the cluster, not the
+      # application repository.
+      - name: Check out the config repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CONFIG_REPO }}
+          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+
+      - name: Set the image tag
+        run: |
+          cd "$OVERLAY"
+          kustomize edit set image \
+            nginx="${REGISTRY}/${IMAGE}:${{ needs.build.outputs.tag }}"
+
+      - name: Commit -- this is the deployment
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "staging: ${IMAGE} ${{ needs.build.outputs.tag }}"
+          git push

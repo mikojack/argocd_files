@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  # A Deployment defaults to 600s before Kubernetes calls a rollout failed,
+  # which means Argo CD would report Degraded ten minutes after a bad image.
+  # One minute keeps the feedback loop inside the exercise.
+  progressDeadlineSeconds: 60
+  replicas: 2
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.28-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: content
+              mountPath: /usr/share/nginx/html
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+      volumes:
+        - name: content
+          configMap:
+            name: webapp-content

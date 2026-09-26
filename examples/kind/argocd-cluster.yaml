@@ -1,12 +1,11 @@
 # Cluster that runs Argo CD itself.
-# kind create cluster --name argocd --config examples/kind/argocd-cluster.yaml
+#
+#   kind create cluster --name argocd --config examples/kind/argocd-cluster.yaml
+#
+# No extraPortMappings on purpose: the exercises reach the UI through
+# `kubectl port-forward`, and a fixed host port is the single most common reason
+# for `kind create cluster` to fail on a machine that already runs something.
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
-    extraPortMappings:
-      # Argo CD UI reachable on http://localhost:8080 once an Ingress or a
-      # NodePort service is in place; port-forward works without this too.
-      - containerPort: 30080
-        hostPort: 8080
-        protocol: TCP
