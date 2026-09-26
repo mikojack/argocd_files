@@ -1,0 +1,16 @@
+# Replace <your-fork> before applying.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: training
+  namespace: argocd
+spec:
+  description: Applications built during the Argo CD training
+  sourceRepos:
+    - https://gitlab.com/<your-fork>/argocd_files.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: 'training-*'
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace

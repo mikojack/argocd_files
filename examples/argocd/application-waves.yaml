@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: waves
+  namespace: argocd
+spec:
+  project: training
+  source:
+    repoURL: https://gitlab.com/<your-fork>/argocd_files.git
+    targetRevision: main
+    path: examples/apps/waves
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: training-waves
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

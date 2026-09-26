@@ -1,0 +1,30 @@
+# Optional ingress for exercise 1. Requires the cluster to have been created
+# with examples/kind/argocd-cluster-ingress.yaml and Traefik installed.
+#
+# The host uses nip.io: any *.127.0.0.1.nip.io name resolves to 127.0.0.1, so
+# this works without editing /etc/hosts and without root.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    # Without these the router is attached to the plain-HTTP entrypoint only,
+    # and HTTPS answers 404.
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: argocd.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                # Port 80: argocd-server runs with server.insecure=true, so
+                # Traefik terminates TLS and talks plain HTTP to the backend.
+                port:
+                  number: 80

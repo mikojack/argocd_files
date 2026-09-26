@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: 1.28-alpine
+
+message: "rendered by Helm, deployed by Argo CD"

@@ -1,0 +1,46 @@
+# Promotion to production: run by hand, gated twice, and it deploys nothing
+# itself. It opens a pull request against the production overlay -- merging that
+# pull request is the deployment, and Argo CD does the rest.
+
+name: promote to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag already running in staging"
+        required: true
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    # Gate one: the environment's protection rule holds this job until a named
+    # reviewer releases it. Note that if several reviewers are listed, ONE
+    # approval is enough -- if you need two people, that belongs in the pull
+    # request rules, not here.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: your-org/argocd_files
+          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+
+      - name: Open the promotion pull request
+        env:
+          GH_TOKEN: ${{ secrets.CONFIG_REPO_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          git switch -c "promote/webapp-${TAG}"
+          cd examples/apps/kustomize-webapp/overlays/prod
+          kustomize edit set image "nginx=ghcr.io/your-org/webapp:${TAG}"
+          cd -
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "production: webapp ${TAG}"
+          git push origin "promote/webapp-${TAG}"
+          # Gate two: a human reviews and merges. Both approvals end up in the
+          # Git history rather than in somebody's memory.
+          gh pr create \
+            --title "Promote webapp to ${TAG}" \
+            --body "Tag ${TAG} has been running in staging. Merging deploys it to production." \
+            --base main
