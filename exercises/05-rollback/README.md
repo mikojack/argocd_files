@@ -7,7 +7,7 @@ Work on the `webapp` application from exercise 2.
 
 ## 1. Build up some history
 
-Each of these is a commit to your fork followed by a sync. The replica count
+Each of these is a commit to your branch followed by a sync. The replica count
 you start from depends on what you did in exercise 2 -- the `sed` below
 replaces whatever is there rather than matching a particular number.
 
@@ -207,7 +207,7 @@ The PostSync job made a real HTTP request to the Service and printed
 
 ## 7. Break a hook
 
-Edit `examples/apps/waves/02-presync-job.yaml` in your fork so the migration
+Edit `examples/apps/waves/02-presync-job.yaml` so the migration
 fails — change the command to `exit 1` — then commit, push and sync.
 
 ```bash

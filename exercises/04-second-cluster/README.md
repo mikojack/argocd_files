@@ -98,9 +98,9 @@ Two clusters now, both `Successful`.
 ```bash
 argocd app create webapp-workload \
   --project training \
-  --repo https://gitlab.com/<your-fork>/argocd_files.git \
+  --repo "$REPO" \
   --path examples/apps/webapp \
-  --revision HEAD \
+  --revision "$BRANCH" \
   --dest-name workload \
   --dest-namespace training-webapp \
   --sync-option CreateNamespace=true
@@ -116,8 +116,7 @@ control working as designed.
 
 ## 5. Widen the project, deliberately
 
-Add the second destination to `examples/argocd/appproject-training.yaml` in your
-fork:
+Add the second destination to `examples/argocd/appproject-training.yaml`:
 
 ```yaml
   destinations:
@@ -137,9 +136,9 @@ git push
 kubectl apply -f examples/argocd/appproject-training.yaml
 argocd app create webapp-workload \
   --project training \
-  --repo https://gitlab.com/<your-fork>/argocd_files.git \
+  --repo "$REPO" \
   --path examples/apps/webapp \
-  --revision HEAD \
+  --revision "$BRANCH" \
   --dest-name workload \
   --dest-namespace training-webapp \
   --sync-option CreateNamespace=true

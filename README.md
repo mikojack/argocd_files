@@ -2,16 +2,19 @@
 
 Lab material for the NobleProg **Argo CD** course.
 
-> **Fork this repository before you start.** Several exercises ask you to commit
-> a change and watch Argo CD react to it, so you need a repository you can push
-> to. Work on your fork for the whole day.
+> **Work on your own branch.** Several exercises ask you to commit a change and
+> watch Argo CD react to it, so you need somewhere you can push to. In the
+> course every participant gets a branch of this repository (e.g. `user3`) and
+> a token that can push to it -- work on that branch for the whole day, and
+> never push to `main`. A fork of your own works too and is described as an
+> option in [exercise 1](exercises/01-install/README.md).
 
 On the lab VM this repository is checked out as **`~/workshop`**
 (`/home/dadesktop/workshop`) -- that directory *is* the working copy, which is
 the same convention as the other NobleProg labs:
 
 ```bash
-git clone https://gitlab.com/<your-user>/argocd_files.git ~/workshop
+git clone --branch <your-branch> https://gitlab.com/greenitnet/argocd_files.git ~/workshop
 cd ~/workshop
 ```
 
@@ -47,7 +50,7 @@ anywhere these are present.
 | `kubectl` | everything that is not Argo CD itself | v1.34 |
 | `argocd` | the CLI: app, cluster, repo, proj, account | **v3.5.2** |
 | `helm` | the chart installation in exercise 1, rendering it yourself in exercise 3 | v3.18.6 |
-| `git` | fork, commit, push -- most exercises end in a commit | any recent |
+| `git` | branch, commit, push -- most exercises end in a commit | any recent |
 | `jq` | reading JSON out of `kubectl -o json` and `argocd ... -o json` | any recent |
 | `yq` | the same for YAML, when a manifest is easier to query than to read | 4.x |
 | `tree` | reading the shape of a chart and of a Kustomize base in exercise 3 | any recent |
