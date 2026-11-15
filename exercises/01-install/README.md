@@ -9,51 +9,141 @@ web UI.
 Everything below is run from inside a clone of this repository. The `kind`
 configs, the manifests and the applications are all referenced by relative path
 -- `kind create cluster --config examples/kind/...` only works when that is
-your working directory. From exercise 2 onward you also *push* to it, so it has
-to be a repository you own, not a read-only copy of someone else's.
+your working directory. From exercise 2 onward you also *push* to it, and
+Argo CD reads back what you pushed.
 
-**If the repository is already on your lab VM**, use that clone -- but check
-where it points and bring it up to date:
+The whole group works in **one** repository, each participant on **a branch of
+their own**. Your trainer gives you three things:
+
+| | |
+|---|---|
+| a branch name | e.g. `user3` -- yours for the day, nobody else pushes to it |
+| a GitLab username | the user the token belongs to |
+| a token | read and write access to this repository, and nothing else |
+
+The repository is public, so anyone -- Argo CD included -- can read it without
+a credential. The token is what lets **you push** to it.
+
+### Put the three values where every later step can find them
+
+```bash
+cat > ~/.workshop-env <<'EOF'
+export BRANCH=user3                  # your branch
+export GITLAB_USER=<the-username>    # from the trainer
+export GITLAB_TOKEN=<the-token>      # from the trainer
+export REPO=https://gitlab.com/greenitnet/argocd_files.git
+EOF
+chmod 600 ~/.workshop-env
+echo 'source ~/.workshop-env' >> ~/.bashrc
+source ~/.workshop-env
+```
+
+Every command from here to the end of exercise 6 uses `$BRANCH` and `$REPO`
+rather than a value you have to type, which is why they go into a file and not
+only into this shell. Any terminal you open later reads it from `~/.bashrc`.
+
+> A token in a file in your home directory is a lab shortcut. It is acceptable
+> on a VM that is thrown away tonight and on a token that expires with the
+> course; it is not how you would keep a credential at work.
+
+### Teach git who you are and how to log in
+
+```bash
+git config --global user.name  "$GITLAB_USER"
+git config --global user.email "$GITLAB_USER@example.com"
+
+git config --global credential.helper store
+printf 'protocol=https\nhost=gitlab.com\nusername=%s\npassword=%s\n' \
+  "$GITLAB_USER" "$GITLAB_TOKEN" | git credential approve
+```
+
+The first two lines are what `git commit` asks for -- without them the first
+commit in exercise 2 stops with `Author identity unknown`. The last two hand
+the token to git's credential store (`~/.git-credentials`), so no `clone`,
+`pull` or `push` today asks you for a password.
+
+### Check out your branch
+
+**If the repository is already on your lab VM**, use that clone -- point it at
+the course repository and switch to your branch:
 
 ```bash
 cd ~/workshop
-git remote -v
-git pull
+git remote set-url origin "$REPO"
+git fetch origin
+git switch "$BRANCH"
 ```
 
-**If it is not there**, fork the course repository in GitLab, then clone your
-fork:
+**If it is not there**, clone it straight onto your branch:
 
 ```bash
-git clone https://gitlab.com/<your-fork>/argocd_files.git ~/workshop
+git clone --branch "$BRANCH" "$REPO" ~/workshop
 cd ~/workshop
 ```
 
-**Either way**, `origin` has to be your fork by the time you reach exercise 2.
-If the clone on the VM still points at the course repository, fork it in GitLab
-and re-point the clone:
+`git switch` with a name that exists only on the remote creates a local branch
+tracking `origin/$BRANCH`, so a bare `git push` later goes to the right place.
+
+<details>
+  <summary><code>fatal: invalid reference</code> / <code>Remote branch ... not found</code> -- my branch does not exist</summary>
+
+The trainer creates the branches before the course, so ask first -- a typo in
+`~/.workshop-env` is the usual cause. If you are told to create it yourself,
+start it from `main`:
 
 ```bash
-git remote set-url origin https://gitlab.com/<your-fork>/argocd_files.git
-git push -u origin HEAD
+git switch -c "$BRANCH" origin/main
+git push -u origin "$BRANCH"
 ```
 
-Then confirm you are standing in the right directory with the right remote:
+</details>
+
+Then confirm you are standing in the right directory, on the right branch:
 
 ```bash
-ls examples/kind/          # argocd-cluster.yaml, workload-cluster.yaml, ...
-git remote -v              # origin is yours
-git branch --show-current  # main
+ls examples/kind/                  # argocd-cluster.yaml, workload-cluster.yaml, ...
+git remote -v                      # origin is https://gitlab.com/greenitnet/argocd_files.git
+git status -sb                     # ## user3...origin/user3
 ```
 
-> Stay on `main`. Every `Application` manifest in this repository tracks
-> `targetRevision: main`, so a commit pushed to any other branch is a commit
-> Argo CD will not look at.
+> **Stay on your branch, and never push to `main`.** Every `Application` you
+> create today tracks `targetRevision: $BRANCH`, so a commit pushed anywhere
+> else is a commit Argo CD will not look at. `main` is the course material for
+> the next group -- and the token can write to every branch, so the only thing
+> keeping the group out of each other's branches is that you do not
+> push to them.
 
-> Keep the fork public. From exercise 2 it is Argo CD that clones it, and the
-> exercises hand it no credential -- a private fork fails there, not here. If
-> yours has to be private, exercise 2 opens with a folded section on giving
-> Argo CD a deploy token.
+<details>
+  <summary>Optional: work on a fork of your own instead</summary>
+
+Everything in these exercises also works on a fork -- useful if you repeat the
+course on your own afterwards, or want to keep your work after the token
+expires. Fork <https://gitlab.com/greenitnet/argocd_files> in GitLab, then set `REPO` to your fork and `BRANCH` to the
+branch you want Argo CD to follow -- usually `main`, since the fork is yours:
+
+```bash
+cat > ~/.workshop-env <<'EOF'
+export BRANCH=main
+export GITLAB_USER=<your-gitlab-user>
+export GITLAB_TOKEN=<a-personal-access-token>   # scopes read_repository, write_repository
+export REPO=https://gitlab.com/<your-namespace>/argocd_files.git
+EOF
+source ~/.workshop-env
+
+git clone --branch "$BRANCH" "$REPO" ~/workshop
+```
+
+The git identity and credential store steps above are the same. Two
+differences to carry through the rest of the day:
+
+* In exercise 2, step 1, where the manifests get your branch name, they also
+  need your fork's URL instead of the course repository's -- the step shows the
+  extra `sed` expression.
+* Keep the fork **public**. Argo CD is given no repository credential in
+  these exercises; a private fork needs one, and exercise 2, step 1 has a
+  folded section on how to register it.
+
+</details>
 
 ## 2. Create the lab clusters
 

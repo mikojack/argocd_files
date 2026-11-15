@@ -1,4 +1,4 @@
-# Replace <your-fork> before applying.
+# The course repository. Working on a fork instead? Put your fork's URL here.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -7,7 +7,7 @@ metadata:
 spec:
   description: Applications built during the Argo CD training
   sourceRepos:
-    - https://gitlab.com/<your-fork>/argocd_files.git
+    - https://gitlab.com/greenitnet/argocd_files.git
   destinations:
     - server: https://kubernetes.default.svc
       namespace: 'training-*'

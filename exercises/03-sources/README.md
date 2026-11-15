@@ -4,7 +4,8 @@
 overlay, and see where the settings in the `Application` win over the settings
 in the repository.
 
-Replace `<your-fork>` with your own namespace throughout.
+The `Application` manifests below already track your branch -- exercise 2,
+step 1 filled it in.
 
 ## 1. Helm
 

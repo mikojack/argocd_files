@@ -6,8 +6,8 @@ metadata:
 spec:
   project: training
   source:
-    repoURL: https://gitlab.com/<your-fork>/argocd_files.git
-    targetRevision: main
+    repoURL: https://gitlab.com/greenitnet/argocd_files.git
+    targetRevision: <your-branch>
     path: examples/apps/helm-webapp
     helm:
       releaseName: helm-webapp
