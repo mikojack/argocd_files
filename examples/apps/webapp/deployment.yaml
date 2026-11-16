@@ -9,7 +9,7 @@ spec:
   # which means Argo CD would report Degraded ten minutes after a bad image.
   # One minute keeps the feedback loop inside the exercise.
   progressDeadlineSeconds: 60
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: webapp
