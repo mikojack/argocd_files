@@ -8,7 +8,7 @@ spec:
   project: training
   source:
     repoURL: https://gitlab.com/greenitnet/argocd_files.git
-    targetRevision: <your-branch>
+    targetRevision: user0
     path: examples/apps/webapp
   destination:
     server: https://kubernetes.default.svc
