@@ -7,7 +7,7 @@ spec:
   project: training
   source:
     repoURL: https://gitlab.com/greenitnet/argocd_files.git
-    targetRevision: <your-branch>
+    targetRevision: user4
     path: examples/apps/helm-webapp
     helm:
       releaseName: helm-webapp
